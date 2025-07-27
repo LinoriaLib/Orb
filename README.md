@@ -13,7 +13,7 @@ A comprehensive admin control system featuring:
 
 ## ⚙️ Installation
 ### LocalScript Usage (Single Player)
-1. Place script in `StarterPlayerScripts`
+1. Place script in `StarterGui`
 2. Configure settings:
 ```lua
 local Admins = game.Players.LocalPlayer -- Admin designation
