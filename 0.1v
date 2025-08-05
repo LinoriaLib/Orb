@@ -1,0 +1,108 @@
+--[[
+🎶 Anime Orb Music Visualizer with GUI + Chat Command
+Allows any player to use /music ID and GUI input for music ID
+]]--
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Orb creation for each player
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        local orbModel = Instance.new("Model", character)
+        orbModel.Name = player.Name .. "'s Anime Orb"
+
+        local orb = Instance.new("Part", orbModel)
+        orb.Name = "Orb"
+        orb.Shape = Enum.PartType.Ball
+        orb.Size = Vector3.new(1.5, 1.5, 1.5)
+        orb.Material = Enum.Material.Neon
+        orb.Color = Color3.fromRGB(0, 200, 255)
+        orb.Anchored = false
+        orb.CanCollide = false
+        orb.Position = character:WaitForChild("Head").Position + Vector3.new(0, 3, 5)
+
+        local light = Instance.new("PointLight", orb)
+        light.Color = orb.Color
+        light.Range = 8
+        light.Brightness = 3
+
+        local bodyGyro = Instance.new("BodyGyro", orb)
+        bodyGyro.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
+
+        local bodyPos = Instance.new("BodyPosition", orb)
+        bodyPos.MaxForce = Vector3.new(1e7, 1e7, 1e7)
+        bodyPos.Position = orb.Position
+
+        local sound = Instance.new("Sound", orb)
+        sound.SoundId = "rbxassetid://1843521798"
+        sound.Looped = true
+        sound.Volume = 1
+        sound:Play()
+
+        -- Visualizer
+        RunService.Heartbeat:Connect(function()
+            if character:FindFirstChild("Head") then
+                local time = tick()
+                local offsetY = math.sin(time * 2) * 0.5
+                bodyPos.Position = character.Head.Position + Vector3.new(0, 3 + offsetY, 5)
+                bodyGyro.CFrame = CFrame.new(orb.Position) * CFrame.Angles(0, time * 2, 0)
+
+                local loudness = math.clamp(sound.PlaybackLoudness / 200, 0.5, 2)
+                orb.Size = Vector3.new(1.5, 1.5, 1.5) * loudness
+                light.Brightness = 2 + loudness
+                local hue = (time * 20 % 360) / 360
+                orb.Color = Color3.fromHSV(hue, 1, 1)
+                light.Color = orb.Color
+            end
+        end)
+
+        -- Chat command /music ID
+        player.Chatted:Connect(function(msg)
+            local id = string.match(msg, "/music%s+(%d+)")
+            if id then
+                local assetId = "rbxassetid://" .. id
+                sound:Stop()
+                sound.SoundId = assetId
+                sound:Play()
+                print("▶️ Now playing: " .. assetId)
+            end
+        end)
+
+        -- GUI input for music ID
+        local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+        gui.Name = "MusicGUI"
+
+        local frame = Instance.new("Frame", gui)
+        frame.Position = UDim2.new(0.3, 0, 0.8, 0)
+        frame.Size = UDim2.new(0, 250, 0, 50)
+        frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+        frame.BorderSizePixel = 0
+
+        local textBox = Instance.new("TextBox", frame)
+        textBox.PlaceholderText = "Enter Music ID"
+        textBox.Size = UDim2.new(0.7, 0, 1, 0)
+        textBox.BackgroundColor3 = Color3.fromRGB(60,60,60)
+        textBox.TextColor3 = Color3.new(1,1,1)
+        textBox.BorderSizePixel = 0
+
+        local button = Instance.new("TextButton", frame)
+        button.Text = "Play"
+        button.Size = UDim2.new(0.3, 0, 1, 0)
+        button.Position = UDim2.new(0.7, 0, 0, 0)
+        button.BackgroundColor3 = Color3.fromRGB(0,200,255)
+        button.TextColor3 = Color3.new(1,1,1)
+        button.BorderSizePixel = 0
+
+        button.MouseButton1Click:Connect(function()
+            local id = textBox.Text
+            if tonumber(id) then
+                local assetId = "rbxassetid://" .. id
+                sound:Stop()
+                sound.SoundId = assetId
+                sound:Play()
+                print("▶️ Now playing: " .. assetId)
+            end
+        end)
+    end)
+end)
